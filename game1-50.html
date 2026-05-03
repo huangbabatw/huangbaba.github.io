@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>50高頻單字挑戰賽</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --success: #2ecc71;
+            --error: #e74c3c;
+            --bg: #f0f2f5;
+        }
+        body {
+            font-family: 'Segoe UI', Microsoft JhengHei, sans-serif;
+            background-color: var(--bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #game-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #555;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #eee;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        #progress {
+            width: 0%;
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s;
+        }
+        .question-box {
+            margin: 30px 0;
+        }
+        .chinese-hint {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .phonetic {
+            color: #888;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 80%;
+            padding: 12px;
+            font-size: 1.2rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            border-color: var(--primary);
+        }
+        #feedback {
+            height: 24px;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 20px;
+        }
+        .btn:hover { background: #357abd; }
+        .success { color: var(--success); }
+        .error { color: var(--error); }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div class="stats">
+        <span>分數: <span id="score">0</span></span>
+        <span>題次: <span id="q-count">0</span> / 10</span>
+    </div>
+    <div class="progress-bar"><div id="progress"></div></div>
+
+    <div id="game-ui">
+        <div class="question-box">
+            <div class="chinese-hint" id="chinese-hint">載入中...</div>
+            <div class="phonetic" id="phonetic-hint"></div>
+            <input type="text" id="answer-input" placeholder="輸入英文單字..." autocomplete="off">
+            <div id="feedback"></div>
+        </div>
+        <button class="btn" onclick="checkAnswer()">提交答案</button>
+    </div>
+
+    <div id="result-ui" style="display: none;">
+        <h2>測驗結束！</h2>
+        <p style="font-size: 1.5rem;">最終得分: <span id="final-score">0</span></p>
+        <button class="btn" onclick="resetGame()">再玩一次</button>
+    </div>
+</div>
+
+<script>
+    const vocabData = [
+        ["the", "這(定冠詞)", "[ðə]"], ["be", "是", "[bi]"], ["to", "到/去/向", "[tu]"], ["of", "的", "[əv]"], ["and", "和/與", "[ænd]"],
+        ["a", "一個", "[e]"], ["in", "在...裡面", "[ɪn]"], ["that", "那個", "[ðæt]"], ["have", "有", "[hæv]"], ["I", "我", "[aɪ]"],
+        ["it", "它", "[ɪt]"], ["for", "為了", "[fɔr]"], ["not", "不", "[nɑt]"], ["on", "在...上面", "[ɑn]"], ["with", "與...一起", "[wɪð]"],
+        ["he", "他", "[hi]"], ["as", "如同", "[æz]"], ["you", "你", "[ju]"], ["do", "做", "[du]"], ["at", "在(某處)", "[æt]"],
+        ["this", "這", "[ðɪs]"], ["but", "但是", "[bʌt]"], ["his", "他的", "[hɪz]"], ["by", "藉由", "[baɪ]"], ["from", "來自", "[frʌm]"],
+        ["they", "他們", "[ðe]"], ["we", "我們", "[wi]"], ["say", "說", "[se]"], ["her", "她的", "[hɝ]"], ["she", "她", "[ʃi]"],
+        ["or", "或者", "[ɔr]"], ["an", "一個(元音前)", "[æn]"], ["will", "將要", "[wɪl]"], ["my", "我的", "[maɪ]"], ["one", "一", "[wʌn]"],
+        ["all", "全部", "[ɔl]"], ["would", "會/想要", "[wʊd]"], ["there", "在那裡", "[ðɛr]"], ["their", "他們的", "[ðɛr]"], ["what", "什麼", "[hwɑt]"],
+        ["so", "所以", "[so]"], ["up", "向上", "[ʌp]"], ["out", "外面", "[aʊt]"], ["if", "如果", "[ɪf]"], ["about", "關於", "[əˈbaʊt]"],
+        ["who", "誰", "[hu]"], ["get", "得到", "[ɡɛt]"], ["which", "哪個", "[hwɪtʃ]"], ["go", "去", "[ɡo]"], ["me", "我(受格)", "[mi]"]
+    ];
+
+    let currentQuestion = {};
+    let score = 0;
+    let count = 0;
+    const totalQuestions = 10;
+
+    function nextQuestion() {
+        if (count >= totalQuestions) {
+            showResult();
+            return;
+        }
+        
+        count++;
+        document.getElementById('q-count').innerText = count;
+        document.getElementById('progress').style.width = (count / totalQuestions * 100) + '%';
+        
+        const randomIndex = Math.floor(Math.random() * vocabData.length);
+        currentQuestion = {
+            english: vocabData[randomIndex][0],
+            chinese: vocabData[randomIndex][1],
+            kk: vocabData[randomIndex][2]
+        };
+
+        document.getElementById('chinese-hint').innerText = currentQuestion.chinese;
+        document.getElementById('phonetic-hint').innerText = currentQuestion.kk;
+        document.getElementById('answer-input').value = '';
+        document.getElementById('feedback').innerText = '';
+        document.getElementById('answer-input').focus();
+        
+        // 自動發音
+        speak(currentQuestion.english);
+    }
+
+    function checkAnswer() {
+        const userAnswer = document.getElementById('answer-input').value.trim().toLowerCase();
+        const feedback = document.getElementById('feedback');
+
+        if (userAnswer === currentQuestion.english.toLowerCase()) {
+            score += 10;
+            document.getElementById('score').innerText = score;
+            feedback.innerText = "正確！ Excellent!";
+            feedback.className = "success";
+            setTimeout(nextQuestion, 1000);
+        } else {
+            feedback.innerText = `錯誤，答案是: ${currentQuestion.english}`;
+            feedback.className = "error";
+            setTimeout(nextQuestion, 2000);
+        }
+    }
+
+    function showResult() {
+        document.getElementById('game-ui').style.display = 'none';
+        document.getElementById('result-ui').style.display = 'block';
+        document.getElementById('final-score').innerText = score;
+    }
+
+    function resetGame() {
+        score = 0;
+        count = 0;
+        document.getElementById('score').innerText = '0';
+        document.getElementById('game-ui').style.display = 'block';
+        document.getElementById('result-ui').style.display = 'none';
+        nextQuestion();
+    }
+
+    function speak(word) {
+        const synth = window.speechSynthesis;
+        const utterThis = new SpeechSynthesisUtterance(word);
+        utterThis.lang = 'en-US';
+        synth.speak(utterThis);
+    }
+
+    // 支援 Enter 鍵提交
+    document.getElementById('answer-input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') checkAnswer();
+    });
+
+    // 初始化遊戲
+    nextQuestion();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>常用 50 英文單字表</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            padding: 20px;
+        }
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        table {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .pronounce-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .pronounce-btn:hover {
+            background: #c0392b;
+        }
+        .phonetic {
+            color: #7f8c8d;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+
+<h2>英語最高頻使用前 50 單字表</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>排名</th>
+            <th>單字</th>
+            <th>中文意思</th>
+            <th>KK 音標</th>
+            <th>發音</th>
+        </tr>
+    </thead>
+    <tbody id="vocab-table">
+        </tbody>
+</table>
+
+<script>
+    const vocabulary = [
+        ["the", "這(定冠詞)", "[ðə]"], ["be", "是", "[bi]"], ["to", "到/去/向", "[tu]"], ["of", "的", "[əv]"], ["and", "和/與", "[ænd]"],
+        ["a", "一個", "[e]"], ["in", "在...裡面", "[ɪn]"], ["that", "那個", "[ðæt]"], ["have", "有", "[hæv]"], ["I", "我", "[aɪ]"],
+        ["it", "它", "[ɪt]"], ["for", "為了", "[fɔr]"], ["not", "不", "[nɑt]"], ["on", "在...上面", "[ɑn]"], ["with", "與...一起", "[wɪð]"],
+        ["he", "他", "[hi]"], ["as", "如同", "[æz]"], ["you", "你", "[ju]"], ["do", "做", "[du]"], ["at", "在(某處)", "[æt]"],
+        ["this", "這", "[ðɪs]"], ["but", "但是", "[bʌt]"], ["his", "他的", "[hɪz]"], ["by", "藉由", "[baɪ]"], ["from", "來自", "[frʌm]"],
+        ["they", "他們", "[ðe]"], ["we", "我們", "[wi]"], ["say", "說", "[se]"], ["her", "她的", "[hɝ]"], ["she", "她", "[ʃi]"],
+        ["or", "或者", "[ɔr]"], ["an", "一個(元音前)", "[æn]"], ["will", "將要", "[wɪl]"], ["my", "我的", "[maɪ]"], ["one", "一", "[wʌn]"],
+        ["all", "全部", "[ɔl]"], ["would", "會/想要", "[wʊd]"], ["there", "在那裡", "[ðɛr]"], ["their", "他們的", "[ðɛr]"], ["what", "什麼", "[hwɑt]"],
+        ["so", "所以", "[so]"], ["up", "向上", "[ʌp]"], ["out", "外面", "[aʊt]"], ["if", "如果", "[ɪf]"], ["about", "關於", "[əˈbaʊt]"],
+        ["who", "誰", "[hu]"], ["get", "得到", "[ɡɛt]"], ["which", "哪個", "[hwɪtʃ]"], ["go", "去", "[ɡo]"], ["me", "我(受格)", "[mi]"]
+    ];
+
+    const tableBody = document.getElementById('vocab-table');
+
+    vocabulary.forEach((item, index) => {
+        let row = `<tr>
+            <td>${index + 1}</td>
+            <td><strong>${item[0]}</strong></td>
+            <td>${item[1]}</td>
+            <td class="phonetic">${item[2]}</td>
+            <td><button class="pronounce-btn" onclick="speak('${item[0]}')">播放 🔊</button></td>
+        </tr>`;
+        tableBody.innerHTML += row;
+    });
+
+    function speak(word) {
+        const synth = window.speechSynthesis;
+        const utterThis = new SpeechSynthesisUtterance(word);
+        utterThis.lang = 'en-US';
+        synth.speak(utterThis);
+    }
+</script>
+
+</body>
+</html>

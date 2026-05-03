@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KK音標 聽力挑戰賽</title>
+    <style>
+        body { font-family: 'Segoe UI', "Microsoft JhengHei", sans-serif; background: #6c5ce7; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        #game-box { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 450px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .btn-audio { background: #3498db; color: white; border: none; padding: 15px 30px; border-radius: 50px; font-size: 1.2rem; cursor: pointer; margin-bottom: 20px; transition: 0.3s; }
+        .btn-audio:hover { background: #2980b9; transform: scale(1.05); }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .opt { background: #f8f9fa; border: 2px solid #eee; padding: 15px; border-radius: 12px; font-size: 1.5rem; cursor: pointer; transition: 0.2s; }
+        .opt:hover { border-color: #6c5ce7; background: #f0edff; }
+        .correct { background: #00b894 !important; color: white; border-color: #00b894; }
+        .wrong { background: #d63031 !important; color: white; border-color: #d63031; }
+        #feedback { margin-top: 20px; font-weight: bold; height: 1.5rem; }
+    </style>
+</head>
+<body>
+
+<div id="game-box">
+    <div style="display:flex; justify-content: space-between; color: #666; margin-bottom: 10px;">
+        <span>得分: <b id="score">0</b></span>
+        <span>題次: <b id="round">1</b>/10</span>
+    </div>
+    <h2>聽聲音，選音標！</h2>
+    <button class="btn-audio" onclick="playCurrent()">點我播放聲音 🔊</button>
+    
+    <div class="options-grid" id="options"></div>
+    <div id="feedback"></div>
+</div>
+
+<script>
+    const quizData = [
+        ["sit", "[ɪ]"], ["seat", "[i]"], ["cat", "[æ]"], ["met", "[ɛ]"], ["mate", "[e]"],
+        ["hot", "[ɑ]"], ["cut", "[ʌ]"], ["bird", "[ɝ]"], ["book", "[ʊ]"], ["boot", "[u]"],
+        ["thin", "[θ]"], ["this", "[ð]"], ["she", "[ʃ]"], ["vision", "[ʒ]"], ["sing", "[ŋ]"]
+    ];
+
+    const posFeed = ["太準了！", "耳朵很利喔！", "正確！很有感覺！", "沒錯，就是這個音！"];
+    const negFeed = ["哎呀，聽錯了！正確是：", "再仔細聽看看，答案是：", "沒關係，這是練習。正確是："];
+
+    let score = 0;
+    let currentRound = 1;
+    let currentAnswer = "";
+    let isWaiting = false;
+
+    function initRound() {
+        if (currentRound > 10) {
+            document.getElementById('game-box').innerHTML = `<h2>挑戰結束！</h2><p style="font-size:1.5rem">最終分數：${score}</p><button class="btn-audio" onclick="location.reload()">再玩一次</button>`;
+            return;
+        }
+        isWaiting = false;
+        document.getElementById('round').innerText = currentRound;
+        document.getElementById('feedback').innerText = "";
+        
+        const q = quizData[Math.floor(Math.random() * quizData.length)];
+        currentAnswer = q[1];
+        playCurrent(q[0]);
+
+        let choices = [q[1]];
+        while(choices.length < 4) {
+            let f = quizData[Math.floor(Math.random() * quizData.length)][1];
+            if(!choices.includes(f)) choices.push(f);
+        }
+        choices.sort(() => Math.random() - 0.5);
+
+        const grid = document.getElementById('options');
+        grid.innerHTML = "";
+        choices.forEach(c => {
+            const b = document.createElement('div');
+            b.className = 'opt';
+            b.innerText = c;
+            b.onclick = () => check(b, c);
+            grid.appendChild(b);
+        });
+    }
+
+    let lastWord = "";
+    function playCurrent(word) {
+        if(word) lastWord = word;
+        const ut = new SpeechSynthesisUtterance(lastWord);
+        ut.lang = 'en-US';
+        window.speechSynthesis.speak(ut);
+    }
+
+    function check(el, val) {
+        if(isWaiting) return;
+        isWaiting = true;
+        const fb = document.getElementById('feedback');
+        
+        if(val === currentAnswer) {
+            score += 10;
+            document.getElementById('score').innerText = score;
+            el.classList.add('correct');
+            fb.innerHTML = `<span style="color:#00b894">${posFeed[Math.floor(Math.random()*posFeed.length)]}</span>`;
+        } else {
+            el.classList.add('wrong');
+            fb.innerHTML = `<span style="color:#d63031">${negFeed[Math.floor(Math.random()*negFeed.length)]} ${currentAnswer}</span>`;
+            Array.from(document.getElementsByClassName('opt')).forEach(b => {
+                if(b.innerText === currentAnswer) b.classList.add('correct');
+            });
+        }
+        
+        currentRound++;
+        setTimeout(initRound, 1800);
+    }
+
+    window.onload = initRound;
+</script>
+</body>
+</html>

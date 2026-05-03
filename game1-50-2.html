@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>50高頻單字：語音選擇挑戰</title>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --success: #00b894;
+            --error: #d63031;
+            --bg: #f8f9fa;
+        }
+        body {
+            font-family: 'Segoe UI', "Microsoft JhengHei", sans-serif;
+            background: var(--bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        #game-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 420px;
+            text-align: center;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f1f1;
+            font-size: 1.1rem;
+        }
+        .word-display {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 10px 0;
+            letter-spacing: -1px;
+        }
+        .kk-display {
+            color: #636e72;
+            margin-bottom: 25px;
+            font-size: 1.3rem;
+            font-family: Arial, sans-serif;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        .option-btn {
+            background: #fff;
+            border: 2px solid #e0e0e0;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1.15rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .option-btn:hover {
+            background-color: #f0edff;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        .correct {
+            background-color: var(--success) !important;
+            color: white !important;
+            border-color: var(--success) !important;
+        }
+        .wrong {
+            background-color: var(--error) !important;
+            color: white !important;
+            border-color: var(--error) !important;
+        }
+        #message {
+            margin-top: 25px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            min-height: 1.6rem;
+        }
+        .score-val { color: var(--primary); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="game-card">
+    <div class="header">
+        <div>得分: <span id="score" class="score-val">0</span></div>
+        <div>進度: <span id="current-idx">1</span> / 10</div>
+    </div>
+
+    <div id="quiz-ui">
+        <div class="word-display" id="target-word">...</div>
+        <div class="kk-display" id="target-kk"></div>
+        <div class="options-grid" id="options"></div>
+        <div id="message"></div>
+    </div>
+
+    <div id="result-ui" style="display:none">
+        <h2>測驗完成！</h2>
+        <p>最終得分：<span id="final-score" style="font-size:2.5rem; color:var(--primary); font-weight:bold;">0</span></p>
+        <button onclick="startGame()" style="padding:12px 24px; cursor:pointer; background:var(--primary); color:white; border:none; border-radius:8px; font-size:1rem;">重新開始挑戰</button>
+    </div>
+</div>
+
+<script>
+    const vocabData = [
+        ["the", "這(定冠詞)", "[ðə]"], ["be", "是", "[bi]"], ["to", "到/去/向", "[tu]"], ["of", "的", "[əv]"], ["and", "和/與", "[ænd]"],
+        ["a", "一個", "[e]"], ["in", "在...裡面", "[ɪn]"], ["that", "那個", "[ðæt]"], ["have", "有", "[hæv]"], ["I", "我", "[aɪ]"],
+        ["it", "它", "[ɪt]"], ["for", "為了", "[fɔr]"], ["not", "不", "[nɑt]"], ["on", "在...上面", "[ɑn]"], ["with", "與...一起", "[wɪð]"],
+        ["he", "他", "[hi]"], ["as", "如同", "[æz]"], ["you", "你", "[ju]"], ["do", "做", "[du]"], ["at", "在(某處)", "[æt]"],
+        ["this", "這", "[ðɪs]"], ["but", "但是", "[bʌt]"], ["his", "他的", "[hɪz]"], ["by", "藉由", "[baɪ]"], ["from", "來自", "[frʌm]"],
+        ["they", "他們", "[ðe]"], ["we", "我們", "[wi]"], ["say", "說", "[se]"], ["her", "她的", "[hɝ]"], ["she", "她", "[ʃi]"],
+        ["or", "或者", "[ɔr]"], ["an", "一個", "[æn]"], ["will", "將要", "[wɪl]"], ["my", "我的", "[maɪ]"], ["one", "一", "[wʌn]"],
+        ["all", "全部", "[ɔl]"], ["would", "會/想要", "[wʊd]"], ["there", "在那裡", "[ðɛr]"], ["their", "他們的", "[ðɛr]"], ["what", "什麼", "[hwɑt]"],
+        ["so", "所以", "[so]"], ["up", "向上", "[ʌp]"], ["out", "外面", "[aʊt]"], ["if", "如果", "[ɪf]"], ["about", "關於", "[əˈbaʊt]"],
+        ["who", "誰", "[hu]"], ["get", "得到", "[ɡɛt]"], ["which", "哪個", "[hwɪtʃ]"], ["go", "去", "[ɡo]"], ["me", "我", "[mi]"]
+    ];
+
+    // 多樣化的回饋語句庫
+    const positiveFeedback = [
+        "太強了！完全正確！",
+        "沒錯！你很有潛力喔！",
+        "厲害！反應真快！",
+        "答對了！繼續保持氣勢！",
+        "沒錯，這題難不倒你！",
+        "太棒了！你的語感真好！",
+        "正確！距離滿分不遠了！"
+    ];
+
+    const negativeFeedback = [
+        "哎呀，可惜了！正確是：",
+        "差一點點！這單字其實是：",
+        "沒關係，下次會更好！正確是：",
+        "記起來喔，正確答案是：",
+        "這題有點難度吧？答案是：",
+        "別灰心，學起來就是你的！答案是："
+    ];
+
+    let score = 0;
+    let round = 0;
+    let isWaiting = false;
+
+    function getRandom(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function startGame() {
+        score = 0;
+        round = 0;
+        document.getElementById('score').innerText = score;
+        document.getElementById('result-ui').style.display = 'none';
+        document.getElementById('quiz-ui').style.display = 'block';
+        nextQuestion();
+    }
+
+    function nextQuestion() {
+        if (round >= 10) {
+            document.getElementById('quiz-ui').style.display = 'none';
+            document.getElementById('result-ui').style.display = 'block';
+            document.getElementById('final-score').innerText = score;
+            return;
+        }
+
+        round++;
+        isWaiting = false;
+        document.getElementById('current-idx').innerText = round;
+        document.getElementById('message').innerText = "";
+
+        const correctItem = vocabData[Math.floor(Math.random() * vocabData.length)];
+        document.getElementById('target-word').innerText = correctItem[0];
+        document.getElementById('target-kk').innerText = correctItem[2];
+        
+        // 語音發音
+        const utter = new SpeechSynthesisUtterance(correctItem[0]);
+        utter.lang = 'en-US';
+        window.speechSynthesis.speak(utter);
+
+        let choices = [correctItem[1]];
+        while(choices.length < 4) {
+            let fake = vocabData[Math.floor(Math.random() * vocabData.length)][1];
+            if(!choices.includes(fake)) choices.push(fake);
+        }
+        
+        choices.sort(() => Math.random() - 0.5);
+
+        const optionsArea = document.getElementById('options');
+        optionsArea.innerHTML = "";
+        choices.forEach(text => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = text;
+            btn.onclick = () => {
+                if(isWaiting) return;
+                isWaiting = true;
+                
+                if(text === correctItem[1]) {
+                    score += 10;
+                    document.getElementById('score').innerText = score;
+                    btn.classList.add('correct');
+                    document.getElementById('message').innerHTML = `<span style='color:var(--success)'>✨ ${getRandom(positiveFeedback)}</span>`;
+                } else {
+                    btn.classList.add('wrong');
+                    document.getElementById('message').innerHTML = `<span style='color:var(--error)'>💡 ${getRandom(negativeFeedback)} <b>${correctItem[1]}</b></span>`;
+                    // 自動標示正確答案
+                    Array.from(document.getElementsByClassName('option-btn')).forEach(b => {
+                        if(b.innerText === correctItem[1]) b.classList.add('correct');
+                    });
+                }
+                
+                setTimeout(nextQuestion, 1600); // 稍微加長一點回饋時間供閱讀
+            };
+            optionsArea.appendChild(btn);
+        });
+    }
+
+    window.onload = startGame;
+</script>
+
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KK音標 學習寶典</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f4f8; padding: 20px; color: #333; }
+        h1, h2 { text-align: center; color: #2c3e50; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .symbol-card { background: #fff; border: 2px solid #e1e8ed; padding: 15px; border-radius: 10px; text-align: center; cursor: pointer; transition: 0.2s; }
+        .symbol-card:hover { border-color: #3498db; background: #ebf5fb; transform: translateY(-3px); }
+        .symbol { font-size: 2rem; font-weight: bold; color: #3498db; display: block; }
+        .example { font-size: 0.9rem; color: #7f8c8d; }
+        .category-title { border-left: 5px solid #3498db; padding-left: 10px; margin: 20px 0; background: #f9f9f9; padding: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>KK 音標點讀列表</h1>
+    
+    <div class="category-title"><h2>短母音 & 長母音</h2></div>
+    <div class="grid" id="vowels"></div>
+
+    <div class="category-title"><h2>無聲 & 有聲子音</h2></div>
+    <div class="grid" id="consonants"></div>
+</div>
+
+<script>
+    const symbols = {
+        vowels: [
+            ["i", "seat"], ["ɪ", "sit"], ["e", "mate"], ["ɛ", "met"], ["æ", "mat"], 
+            ["u", "boot"], ["ʊ", "book"], ["o", "coat"], ["ɔ", "bought"], ["ɑ", "hot"],
+            ["ʌ", "cut"], ["ə", "ago"], ["ɝ", "bird"], ["ɚ", "teacher"]
+        ],
+        consonants: [
+            ["p", "pen"], ["b", "bed"], ["t", "tea"], ["d", "did"], ["k", "cat"], ["g", "got"],
+            ["f", "fall"], ["v", "van"], ["s", "see"], ["z", "zoo"], ["θ", "thin"], ["ð", "this"],
+            ["ʃ", "she"], ["ʒ", "vision"], ["tʃ", "chin"], ["dʒ", "jet"], ["m", "man"], ["n", "no"],
+            ["ŋ", "sing"], ["l", "leg"], ["r", "red"], ["y", "yes"], ["w", "wet"], ["h", "hot"]
+        ]
+    };
+
+    function createCards(data, targetId) {
+        const container = document.getElementById(targetId);
+        data.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'symbol-card';
+            card.onclick = () => speak(item[1]); // 利用單字範例發音來引導音標感
+            card.innerHTML = `<span class="symbol">${item[0]}</span><span class="example">${item[1]}</span>`;
+            container.appendChild(card);
+        });
+    }
+
+    function speak(text) {
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'en-US';
+        window.speechSynthesis.speak(utter);
+    }
+
+    createCards(symbols.vowels, 'vowels');
+    createCards(symbols.consonants, 'consonants');
+</script>
+</body>
+</html>
